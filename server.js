@@ -1,20 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const ytSearch = require('yt-search');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// รับค่า PORT จาก Render (fallback เป็น 3000 กรณีรันใน local)
-const PORT = process.env.PORT || 3000;
+// เสิร์ฟไฟล์ static HTML จากโฟลเดอร์ public
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Endpoint ทดสอบ
-app.get('/', (req, res) => {
-  res.send('API is running...');
-});
-
-// Endpoint ค้นหาเพลง/วิดีโอ
+// Endpoint ค้นหาเพลง
 app.get('/search', async (req, res) => {
   try {
     const query = req.query.q;
@@ -28,7 +24,7 @@ app.get('/search', async (req, res) => {
       title: video.title,
       thumbnail: video.thumbnail,
       timestamp: video.timestamp,
-      author: video.author.name
+      author: video.author ? video.author.name : ''
     }));
 
     res.json({ results: videos });
@@ -37,6 +33,12 @@ app.get('/search', async (req, res) => {
   }
 });
 
+// Fallback ถ้าเข้าหน้าแรก ให้เปิด index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
